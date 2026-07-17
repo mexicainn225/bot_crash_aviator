@@ -1,10 +1,11 @@
 import logging
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 import database
 
-# Ton TOKEN
-TOKEN = "8741779645:AAERPPUYcY0flcK-t5oWDoNGFbjvBYUR_30"
+# Récupère le TOKEN depuis les variables d'environnement de Render
+TOKEN = os.environ.get("TOKEN")
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -14,6 +15,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Bot opérationnel pour l'ID : {user_id}")
 
 if __name__ == '__main__':
-    application = ApplicationBuilder().token(TOKEN).build()
-    application.add_handler(CommandHandler('start', start))
-    application.run_polling()
+    if not TOKEN:
+        print("Erreur : Le TOKEN n'est pas configuré dans les variables d'environnement.")
+    else:
+        application = ApplicationBuilder().token(TOKEN).build()
+        application.add_handler(CommandHandler('start', start))
+        application.run_polling()
