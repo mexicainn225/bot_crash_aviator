@@ -11,7 +11,12 @@
         .signal-view { display: none; }
         
         .card { 
-            background: linear-gradient(135deg, #4a0000, #1a0000); 
+            /* Ajout du fond image avec un voile rouge sombre par-dessus */
+            background-size: cover;
+            background-position: center;
+            background-color: rgba(74, 0, 0, 0.85);
+            background-blend-mode: overlay;
+            
             padding: 20px; 
             border-radius: 15px; 
             margin: 20px auto; 
@@ -34,11 +39,11 @@
 
     <div id="menuView" class="menu-view">
         <h1>PRÉDICTION 1XBET</h1>
-        <div onclick="showSignal('CRASH')">
+        <div onclick="showSignal('CRASH', 'images/IMG_2400.jpeg')">
             <p>CRASH</p>
             <img src="images/IMG_2400.jpeg" alt="Crash">
         </div>
-        <div onclick="showSignal('AVIATOR')">
+        <div onclick="showSignal('AVIATOR', 'images/IMG_2401.jpeg')">
             <p>AVIATOR</p>
             <img src="images/IMG_2401.jpeg" alt="Aviator">
         </div>
@@ -46,7 +51,7 @@
 
     <div id="signalView" class="signal-view">
         <h2 id="gameTitle">Jeu</h2>
-        <div class="card">
+        <div class="card" id="cardBg">
             <div class="cote-label">Cote cible</div>
             <div class="cote-val" id="coteVal">0.00x</div>
             <div class="debut-text">Début: <span id="debutTime">00:00:00</span></div>
@@ -58,24 +63,20 @@
 
     <script>
         function generateSignal() {
-            // Génère une cote aléatoire entre 1.10x et 25.00x
             const randomCote = (Math.random() * (25 - 1.1) + 1.1).toFixed(2);
             document.getElementById('coteVal').innerText = randomCote + 'x';
-            
-            // Génère une fiabilité aléatoire entre 1.0 et 1.9
             const randomFiab = (Math.random() * (1.9 - 1.0) + 1.0).toFixed(1);
             document.getElementById('fiabiliteVal').innerText = randomFiab;
-
-            // Mise à jour de l'heure au clic
-            const now = new Date();
-            document.getElementById('debutTime').innerText = now.toLocaleTimeString();
+            document.getElementById('debutTime').innerText = new Date().toLocaleTimeString();
         }
 
-        function showSignal(game) {
+        function showSignal(game, imagePath) {
             document.getElementById('gameTitle').innerText = game;
+            // Applique l'image en fond de la zone rouge
+            document.getElementById('cardBg').style.backgroundImage = "url('" + imagePath + "')";
             document.getElementById('menuView').style.display = 'none';
             document.getElementById('signalView').style.display = 'block';
-            generateSignal(); // Génère un premier signal direct
+            generateSignal();
         }
 
         function hideSignal() {
