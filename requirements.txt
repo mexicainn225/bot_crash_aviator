@@ -1,4 +1,5 @@
-python-telegram-bot
-firebase-admin
 flask
 flask-cors
+python-telegram-bot
+firebase-admin
+gunicorn
