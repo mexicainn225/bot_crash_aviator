@@ -1,18 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini App FIFA</title>
+    <title>Prédiction 1XBET</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #121212; color: white; }
-        img { width: 80%; border-radius: 10px; margin-top: 20px; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            text-align: center; 
+            background-color: #000000; 
+            color: #ffffff; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        h1 { 
+            font-size: 20px; 
+            margin-bottom: 20px; 
+            color: #ffd700; 
+        }
+        .image-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        img { 
+            width: 90%; 
+            max-width: 300px; 
+            border-radius: 15px; 
+            border: 2px solid #333; 
+        }
+        p { 
+            margin-top: 20px; 
+            font-size: 14px; 
+            color: #aaaaaa; 
+        }
     </style>
 </head>
 <body>
-    <h1>Prédiction FIFA</h1>
-    <img src="images/IMG_2400.jpeg" alt="Prediction">
+
+    <h1>PRÉDICTION 1XBET par FIFA</h1>
+
+    <div class="image-container">
+        <img src="images/IMG_2400.jpeg" alt="Aviator 1">
+        <img src="images/IMG_2401.jpeg" alt="Aviator 2">
+    </div>
+
     <p>La prédiction du moment arrive bientôt...</p>
+
+    <script>
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    </script>
 </body>
 </html>
