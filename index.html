@@ -3,61 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prédiction 1XBET</title>
+    <title>Signal Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            text-align: center; 
-            background-color: #000000; 
-            color: #ffffff; 
-            margin: 0; 
+        body { font-family: sans-serif; background: #0e0e0e; color: white; text-align: center; margin: 0; padding: 20px; }
+        .menu-view { display: block; }
+        .signal-view { display: none; }
+        
+        .card { 
+            background: linear-gradient(135deg, #4a0000, #1a0000); 
             padding: 20px; 
-        }
-        h1 { 
-            font-size: 20px; 
-            margin-bottom: 20px; 
-            color: #ffd700; 
-        }
-        h2 { 
-            font-size: 16px; 
-            margin: 15px 0 5px 0; 
-            color: #ffffff; 
-        }
-        .image-container { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 15px; 
-        }
-        img { 
-            width: 90%; 
-            max-width: 300px; 
             border-radius: 15px; 
-            border: 2px solid #333; 
+            margin: 20px auto; 
+            border: 1px solid #770000;
+            width: 90%;
+            max-width: 350px;
         }
-        p { 
-            margin-top: 20px; 
-            font-size: 14px; 
-            color: #aaaaaa; 
-        }
+        .cote-label { color: #aaaaaa; font-size: 14px; }
+        .cote-val { font-size: 36px; color: #00ffcc; font-weight: bold; margin: 5px 0; }
+        .debut-text { color: #cccccc; font-size: 14px; margin-top: 10px; }
+        .fiabilite-text { color: #ff4d6d; font-weight: bold; font-size: 14px; margin-top: 5px; }
+
+        img { width: 100%; border-radius: 10px; cursor: pointer; margin-bottom: 20px; max-width: 300px; }
+        button { width: 90%; max-width: 350px; padding: 15px; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-signal { background: #00ffcc; color: black; }
+        .btn-back { background: #e0e0e0; color: black; }
     </style>
 </head>
 <body>
 
-    <h1>PRÉDICTION 1XBET</h1>
-
-    <div class="image-container">
-        <h2>CRASH</h2>
-        <img src="images/IMG_2400.jpeg" alt="Crash">
-        
-        <h2>AVIATOR</h2>
-        <img src="images/IMG_2401.jpeg" alt="Aviator">
+    <!-- Écran Principal -->
+    <div id="menuView" class="menu-view">
+        <h1>PRÉDICTION 1XBET</h1>
+        <div onclick="showSignal('CRASH', '12.50x', '1.2')">
+            <p>CRASH</p>
+            <img src="images/IMG_2400.jpeg" alt="Crash">
+        </div>
+        <div onclick="showSignal('AVIATOR', '18.06x', '1.5')">
+            <p>AVIATOR</p>
+            <img src="images/IMG_2401.jpeg" alt="Aviator">
+        </div>
     </div>
 
-    <p>La prédiction du moment arrive bientôt...</p>
+    <!-- Écran Prédiction -->
+    <div id="signalView" class="signal-view">
+        <h2 id="gameTitle">Jeu</h2>
+        <div class="card">
+            <div class="cote-label">Cote cible</div>
+            <div class="cote-val" id="coteVal">0.00x</div>
+            <div class="debut-text">Début: <span id="debutTime">00:00:00</span></div>
+            <div class="fiabilite-text">Fiabilité: <span id="fiabiliteVal">0</span></div>
+        </div>
+        <button class="btn-signal">DEMANDER SIGNAL</button>
+        <button class="btn-back" onclick="hideSignal()">RETOUR</button>
+    </div>
 
     <script>
+        function showSignal(game, cote, fiab) {
+            document.getElementById('menuView').style.display = 'none';
+            document.getElementById('signalView').style.display = 'block';
+            document.getElementById('gameTitle').innerText = game;
+            document.getElementById('coteVal').innerText = cote;
+            document.getElementById('fiabiliteVal').innerText = fiab;
+            
+            // Mise à jour de l'heure exacte au clic
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ":" + 
+                               now.getMinutes().toString().padStart(2, '0') + ":" + 
+                               now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('debutTime').innerText = timeString;
+        }
+
+        function hideSignal() {
+            document.getElementById('menuView').style.display = 'block';
+            document.getElementById('signalView').style.display = 'none';
+        }
+
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
     </script>
