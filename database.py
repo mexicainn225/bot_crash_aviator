@@ -1,22 +1,22 @@
-import firebase_admin
-from firebase_admin import credentials, firestore
+from pymongo import MongoClient
 
-# Initialisation de Firebase
-cred = credentials.Certificate("serviceAccountKey.json") # Assure-toi d'avoir ce fichier dans ton repo
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+# Remplace par ta chaîne de connexion MongoDB (la même que pour tes autres bots)
+MONGO_URI = "TA_CHAINE_DE_CONNEXION_MONGODB_ICI"
+client = MongoClient(MONGO_URI)
 
-# Nom de la collection pour ce nouveau bot
-COLLECTION = "utilisateurs_crash_aviator"
+# Nom de la base de données et de la collection pour ce nouveau bot
+db = client["bot_crash_aviator_db"]
+collection = db["utilisateurs"]
 
 def est_valide(user_id):
-    user_ref = db.collection(COLLECTION).document(str(user_id)).get()
-    if user_ref.exists:
-        return user_ref.to_dict().get("valide", False)
+    user = collection.find_one({"user_id": str(user_id)})
+    if user:
+        return user.get("valide", False)
     return False
 
 def ajouter_en_attente(user_id, id_compte):
-    db.collection(COLLECTION).document(str(user_id)).set({
-        "id_compte": id_compte,
-        "valide": False
-    })
+    collection.update_one(
+        {"user_id": str(user_id)},
+        {"$set": {"id_compte": id_compte, "valide": False}},
+        upsert=True
+    )
