@@ -7,11 +7,11 @@ from flask_cors import CORS
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 from datetime import datetime
-import database 
+import database
 
 # --- CONFIGURATION ---
 TOKEN = os.environ.get("TOKEN")
-ADMIN_ID = 5724620019  # Ton ID est intégré ici
+ADMIN_ID = 5724620019 
 app = Flask(__name__)
 CORS(app)
 
@@ -45,29 +45,45 @@ def get_signal(game):
     return jsonify({'cote': current_data[game]['cote'], 'minute': current_data[game]['minute']})
 
 def run_web():
+    # Note: En production avec Gunicorn, cette ligne n'est pas utilisée 
+    # mais elle reste utile pour le test local.
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
 
 # --- PARTIE BOT TELEGRAM ---
 async def start(update, context):
     user_id = update.effective_user.id
     
-    # Vérification dans la base de données
     if database.is_user_authorized(user_id):
         keyboard = [[InlineKeyboardButton("🚀 Lancer l'Application", web_app={"url": "https://bot-crash-aviator.onrender.com"})]]
         await update.message.reply_text("Re-bonjour ! Voici ton accès :", reply_markup=InlineKeyboardMarkup(keyboard))
     else:
         msg = ("Bienvenue sur le bot 1win 🚀\n\n"
-               "Pour débloquer tes accès, suis ces étapes :\n\n"
-               "1️⃣ Inscris-toi sur 1XBET ici : https://lkbb.cc\n"
-               "2️⃣ Utilise le code promo : COK225\n"
-               "3️⃣ Effectue une recharge sur ton compte OBLIGATOIRE\n"
-               "4️⃣ Envoie ton ID 1XBET ici pour validation.")
+                "Pour débloquer tes accès, suis ces étapes :\n\n"
+                "1️⃣ Inscris-toi sur 1XBET ici : https://lkbb.cc\n"
+                "2️⃣ Utilise le code promo : COK225\n"
+                "3️⃣ Effectue une recharge sur ton compte OBLIGATOIRE\n"
+                "4️⃣ Envoie ton ID 1XBET ici pour validation.")
         await update.message.reply_text(msg)
 
 async def handle_message(update, context):
     text = update.message.text
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+    
     if text.isdigit() and len(text) > 5:
-        await context.bot.send_message(ADMIN_ID, f"Nouvelle demande d'accès :\nID : {text}\nUtilisateur : @{update.effective_user.username}")
+        # 1. Enregistrer dans la base de données (Firebase)
+        # On utilise la fonction 'db' que ton module database devrait gérer
+        database.db.collection('pending_ids').document(str(user_id)).set({
+            'telegram_id': user_id,
+            'username': username,
+            'id_1xbet': text,
+            'status': 'en_attente'
+        })
+        
+        # 2. Notification à l'admin
+        await context.bot.send_message(ADMIN_ID, f"Nouvelle demande d'accès :\nID : {text}\nUtilisateur : @{username}")
+        
+        # 3. Réponse confirmée conforme à ton ancien bot
         await update.message.reply_text("ID reçu ! J'ai transmis ta demande à l'admin. Attends la validation. ✅")
 
 async def valider(update, context):
