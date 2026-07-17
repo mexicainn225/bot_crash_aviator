@@ -6,22 +6,10 @@
     <title>Signal Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { 
-            font-family: sans-serif; 
-            background: #0e0e0e; 
-            color: white; 
-            text-align: center; 
-            margin: 0; 
-            padding: 20px; 
-        }
-        .menu-view { 
-            display: block; 
-        }
-        .signal-view { 
-            display: none; 
-        }
+        body { font-family: sans-serif; background: #0e0e0e; color: white; text-align: center; margin: 0; padding: 20px; }
+        .menu-view { display: block; }
+        .signal-view { display: none; }
         
-        /* Zone rouge avec image de fond */
         .card { 
             background-size: cover;
             background-position: center;
@@ -35,61 +23,19 @@
             max-width: 350px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         }
-        
-        .cote-label { 
-            color: #aaaaaa; 
-            font-size: 14px; 
-        }
-        .cote-val { 
-            font-size: 36px; 
-            color: #ffd700; /* Couleur jaune */
-            font-weight: bold; 
-            margin: 5px 0; 
-        }
-        .debut-text { 
-            color: #cccccc; 
-            font-size: 14px; 
-            margin-top: 10px; 
-        }
-        .fiabilite-text { 
-            color: #ff4d6d; 
-            font-weight: bold; 
-            font-size: 14px; 
-            margin-top: 5px; 
-        }
+        .cote-label { color: #aaaaaa; font-size: 14px; }
+        .cote-val { font-size: 36px; color: #ffd700; font-weight: bold; margin: 5px 0; }
+        .debut-text { color: #cccccc; font-size: 14px; margin-top: 10px; }
+        .fiabilite-text { color: #ff4d6d; font-weight: bold; font-size: 14px; margin-top: 5px; }
 
-        img { 
-            width: 100%; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            margin-bottom: 20px; 
-            max-width: 300px; 
-        }
-        
-        button { 
-            width: 90%; 
-            max-width: 350px; 
-            padding: 15px; 
-            border: none; 
-            border-radius: 10px; 
-            font-weight: bold; 
-            margin-top: 10px; 
-            cursor: pointer; 
-            font-size: 15px;
-        }
-        .btn-signal { 
-            background: #ffd700; /* Bouton Jaune */
-            color: black; 
-        }
-        .btn-back { 
-            background: #e0e0e0; 
-            color: black; 
-        }
+        img { width: 100%; border-radius: 10px; cursor: pointer; margin-bottom: 20px; max-width: 300px; }
+        button { width: 90%; max-width: 350px; padding: 15px; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; font-size: 15px; }
+        .btn-signal { background: #ffd700; color: black; }
+        .btn-back { background: #e0e0e0; color: black; }
     </style>
 </head>
 <body>
 
-    <!-- Écran Principal -->
     <div id="menuView" class="menu-view">
         <h1>PRÉDICTION 1XBET</h1>
         <div onclick="showSignal('CRASH', 'images/IMG_2400.jpeg')">
@@ -102,7 +48,6 @@
         </div>
     </div>
 
-    <!-- Écran Prédiction -->
     <div id="signalView" class="signal-view">
         <h2 id="gameTitle">Jeu</h2>
         <div class="card" id="cardBg">
@@ -116,65 +61,50 @@
     </div>
 
     <script>
-        // Configuration des séquences de minutes pour chaque jeu
         const sequences = {
-            'CRASH': [0, 4, 7, 10, 14, 17],
-            'AVIATOR': [3, 5, 9, 13, 15, 19]
+            'CRASH': [0, 4, 7, 10, 14, 17, 20, 24, 27, 30, 34, 37, 40, 44, 47, 50, 54, 57],
+            'AVIATOR': [3, 5, 9, 13, 15, 19, 23, 25, 29, 33, 35, 39, 43, 45, 49, 53, 55, 59]
         };
 
-        // Suivi de la position dans la boucle
-        let indexCrash = 0;
-        let indexAvia = 0;
-        
-        // Variables pour la mémorisation de la cote
         let savedCote = "";
-        let savedMinute = -1;
+        let savedTargetMin = -1;
         let currentGame = '';
 
         function generateSignal() {
             if (!currentGame) return;
 
-            let sequence = sequences[currentGame];
-            let currentIndex = (currentGame === 'CRASH') ? indexCrash : indexAvia;
-            const targetMin = sequence[currentIndex];
-            
             const now = new Date();
+            const currentHour = now.getHours();
+            const currentMin = now.getMinutes();
             
-            // Si la minute actuelle a changé, on génère une nouvelle cote. Sinon, on garde la même.
-            if (now.getMinutes() !== savedMinute || !savedCote) {
-                savedCote = (Math.random() * (25 - 1.1) + 1.1).toFixed(2);
-                savedMinute = now.getMinutes();
+            let sequence = sequences[currentGame];
+            let nextMin = sequence.find(m => m >= currentMin);
+            
+            if (nextMin === undefined) {
+                nextMin = sequence[0];
             }
 
-            // Fiabilité bloquée à 2
+            if (nextMin !== savedTargetMin || !savedCote) {
+                savedCote = (Math.random() * (25 - 1.1) + 1.1).toFixed(2);
+                savedTargetMin = nextMin;
+            }
+
             document.getElementById('fiabiliteVal').innerText = "2";
             
-            // Formatage de l'heure avec la minute cible de la boucle et la seconde fixée à 50
-            const timeString = now.getHours().toString().padStart(2, '0') + ":" + 
-                               targetMin.toString().padStart(2, '0') + ":50";
+            const displayHour = (nextMin === sequence[0] && currentMin > sequence[sequence.length-1]) ? (currentHour + 1) % 24 : currentHour;
+            const timeString = displayHour.toString().padStart(2, '0') + ":" + 
+                               nextMin.toString().padStart(2, '0') + ":50";
             
             document.getElementById('coteVal').innerText = savedCote + 'x';
             document.getElementById('debutTime').innerText = timeString;
-
-            // Passage à l'étape suivante de la boucle pour le prochain clic
-            if (currentGame === 'CRASH') {
-                indexCrash = (indexCrash + 1) % sequence.length;
-            } else {
-                indexAvia = (indexAvia + 1) % sequence.length;
-            }
         }
 
         function showSignal(game, imagePath) {
             currentGame = game;
             document.getElementById('gameTitle').innerText = game;
-            
-            // Application de l'image de fond dynamique
             document.getElementById('cardBg').style.backgroundImage = "url('" + imagePath + "')";
-            
             document.getElementById('menuView').style.display = 'none';
             document.getElementById('signalView').style.display = 'block';
-            
-            // Premier lancement automatique à l'ouverture du jeu
             generateSignal();
         }
 
