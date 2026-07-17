@@ -1,2 +1,2 @@
-pymongo
-dnspython
+python-telegram-bot
+firebase-admin
