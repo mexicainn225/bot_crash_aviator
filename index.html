@@ -20,32 +20,30 @@
             max-width: 350px;
         }
         .cote-label { color: #aaaaaa; font-size: 14px; }
-        .cote-val { font-size: 36px; color: #00ffcc; font-weight: bold; margin: 5px 0; }
+        .cote-val { font-size: 36px; color: #ffd700; font-weight: bold; margin: 5px 0; }
         .debut-text { color: #cccccc; font-size: 14px; margin-top: 10px; }
         .fiabilite-text { color: #ff4d6d; font-weight: bold; font-size: 14px; margin-top: 5px; }
 
         img { width: 100%; border-radius: 10px; cursor: pointer; margin-bottom: 20px; max-width: 300px; }
         button { width: 90%; max-width: 350px; padding: 15px; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-signal { background: #00ffcc; color: black; }
+        .btn-signal { background: #ffd700; color: black; }
         .btn-back { background: #e0e0e0; color: black; }
     </style>
 </head>
 <body>
 
-    <!-- Écran Principal -->
     <div id="menuView" class="menu-view">
         <h1>PRÉDICTION 1XBET</h1>
-        <div onclick="showSignal('CRASH', '12.50x', '1.2')">
+        <div onclick="showSignal('CRASH')">
             <p>CRASH</p>
             <img src="images/IMG_2400.jpeg" alt="Crash">
         </div>
-        <div onclick="showSignal('AVIATOR', '18.06x', '1.5')">
+        <div onclick="showSignal('AVIATOR')">
             <p>AVIATOR</p>
             <img src="images/IMG_2401.jpeg" alt="Aviator">
         </div>
     </div>
 
-    <!-- Écran Prédiction -->
     <div id="signalView" class="signal-view">
         <h2 id="gameTitle">Jeu</h2>
         <div class="card">
@@ -54,24 +52,30 @@
             <div class="debut-text">Début: <span id="debutTime">00:00:00</span></div>
             <div class="fiabilite-text">Fiabilité: <span id="fiabiliteVal">0</span></div>
         </div>
-        <button class="btn-signal">DEMANDER SIGNAL</button>
+        <button class="btn-signal" onclick="generateSignal()">DEMANDER SIGNAL</button>
         <button class="btn-back" onclick="hideSignal()">RETOUR</button>
     </div>
 
     <script>
-        function showSignal(game, cote, fiab) {
+        function generateSignal() {
+            // Génère une cote aléatoire entre 1.10x et 25.00x
+            const randomCote = (Math.random() * (25 - 1.1) + 1.1).toFixed(2);
+            document.getElementById('coteVal').innerText = randomCote + 'x';
+            
+            // Génère une fiabilité aléatoire entre 1.0 et 1.9
+            const randomFiab = (Math.random() * (1.9 - 1.0) + 1.0).toFixed(1);
+            document.getElementById('fiabiliteVal').innerText = randomFiab;
+
+            // Mise à jour de l'heure au clic
+            const now = new Date();
+            document.getElementById('debutTime').innerText = now.toLocaleTimeString();
+        }
+
+        function showSignal(game) {
+            document.getElementById('gameTitle').innerText = game;
             document.getElementById('menuView').style.display = 'none';
             document.getElementById('signalView').style.display = 'block';
-            document.getElementById('gameTitle').innerText = game;
-            document.getElementById('coteVal').innerText = cote;
-            document.getElementById('fiabiliteVal').innerText = fiab;
-            
-            // Mise à jour de l'heure exacte au clic
-            const now = new Date();
-            const timeString = now.getHours().toString().padStart(2, '0') + ":" + 
-                               now.getMinutes().toString().padStart(2, '0') + ":" + 
-                               now.getSeconds().toString().padStart(2, '0');
-            document.getElementById('debutTime').innerText = timeString;
+            generateSignal(); // Génère un premier signal direct
         }
 
         function hideSignal() {
