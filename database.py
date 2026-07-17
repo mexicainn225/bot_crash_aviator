@@ -1,22 +1,10 @@
-from pymongo import MongoClient
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# Remplace par ta chaîne de connexion MongoDB (la même que pour tes autres bots)
-MONGO_URI = "TA_CHAINE_DE_CONNEXION_MONGODB_ICI"
-client = MongoClient(MONGO_URI)
+# Assure-toi que le nom du fichier JSON ici correspond exactement au nom du fichier dans ton dossier
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
-# Nom de la base de données et de la collection pour ce nouveau bot
-db = client["bot_crash_aviator_db"]
-collection = db["utilisateurs"]
-
-def est_valide(user_id):
-    user = collection.find_one({"user_id": str(user_id)})
-    if user:
-        return user.get("valide", False)
-    return False
-
-def ajouter_en_attente(user_id, id_compte):
-    collection.update_one(
-        {"user_id": str(user_id)},
-        {"$set": {"id_compte": id_compte, "valide": False}},
-        upsert=True
-    )
+# Tu pourras ajouter tes fonctions ici plus tard
+print("Connexion à Firebase réussie !")
