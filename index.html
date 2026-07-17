@@ -30,14 +30,14 @@
 
         img { width: 100%; border-radius: 10px; cursor: pointer; margin-bottom: 20px; max-width: 300px; }
         button { width: 90%; max-width: 350px; padding: 15px; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; font-size: 15px; }
-        .btn-signal { background: #ffd700; color: black; }
+        .btn-signal { background: #00ffcc; color: black; } /* Bouton vert comme sur ton image */
         .btn-back { background: #e0e0e0; color: black; }
     </style>
 </head>
 <body>
 
     <div id="menuView" class="menu-view">
-        <h1>PRÉDICTION 1XBET</h1>
+        <h1>SIGNAL🚀GAME✈️</h1>
         <div onclick="showSignal('CRASH', 'images/IMG_2400.jpeg')">
             <p>CRASH</p>
             <img src="images/IMG_2400.jpeg" alt="Crash">
@@ -67,22 +67,30 @@
         async function generateSignal() {
             if (!currentGame) return;
 
+            // Effet visuel "Calcul..."
+            const coteEl = document.getElementById('coteVal');
+            coteEl.innerText = "Calcul...";
+            coteEl.style.color = "#00ffcc"; 
+
             try {
                 const response = await fetch(`${serverUrl}/get_signal/${currentGame}`);
                 const data = await response.json();
 
+                // Petite pause artificielle pour l'effet
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                coteEl.style.color = "#ffd700";
+                coteEl.innerText = data.cote + 'x';
                 document.getElementById('fiabiliteVal').innerText = "2";
-                document.getElementById('coteVal').innerText = data.cote + 'x';
                 
                 const now = new Date();
-                const displayHour = now.getHours();
-                const timeString = displayHour.toString().padStart(2, '0') + ":" + 
+                const timeString = now.getHours().toString().padStart(2, '0') + ":" + 
                                    data.minute.toString().padStart(2, '0') + ":50";
                 
                 document.getElementById('debutTime').innerText = timeString;
             } catch (error) {
-                console.error("Erreur de connexion :", error);
-                document.getElementById('coteVal').innerText = "Erreur";
+                coteEl.innerText = "Erreur";
+                coteEl.style.color = "red";
             }
         }
 
