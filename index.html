@@ -61,42 +61,29 @@
     </div>
 
     <script>
-        const sequences = {
-            'CRASH': [0, 4, 7, 10, 14, 17, 20, 24, 27, 30, 34, 37, 40, 44, 47, 50, 54, 57],
-            'AVIATOR': [3, 5, 9, 13, 15, 19, 23, 25, 29, 33, 35, 39, 43, 45, 49, 53, 55, 59]
-        };
-
-        let savedCote = "";
-        let savedTargetMin = -1;
         let currentGame = '';
+        const serverUrl = "https://bot-crash-aviator.onrender.com"; 
 
-        function generateSignal() {
+        async function generateSignal() {
             if (!currentGame) return;
 
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMin = now.getMinutes();
-            
-            let sequence = sequences[currentGame];
-            let nextMin = sequence.find(m => m >= currentMin);
-            
-            if (nextMin === undefined) {
-                nextMin = sequence[0];
-            }
+            try {
+                const response = await fetch(`${serverUrl}/get_signal/${currentGame}`);
+                const data = await response.json();
 
-            if (nextMin !== savedTargetMin || !savedCote) {
-                savedCote = (Math.random() * (25 - 1.1) + 1.1).toFixed(2);
-                savedTargetMin = nextMin;
+                document.getElementById('fiabiliteVal').innerText = "2";
+                document.getElementById('coteVal').innerText = data.cote + 'x';
+                
+                const now = new Date();
+                const displayHour = now.getHours();
+                const timeString = displayHour.toString().padStart(2, '0') + ":" + 
+                                   data.minute.toString().padStart(2, '0') + ":50";
+                
+                document.getElementById('debutTime').innerText = timeString;
+            } catch (error) {
+                console.error("Erreur de connexion :", error);
+                document.getElementById('coteVal').innerText = "Erreur";
             }
-
-            document.getElementById('fiabiliteVal').innerText = "2";
-            
-            const displayHour = (nextMin === sequence[0] && currentMin > sequence[sequence.length-1]) ? (currentHour + 1) % 24 : currentHour;
-            const timeString = displayHour.toString().padStart(2, '0') + ":" + 
-                               nextMin.toString().padStart(2, '0') + ":50";
-            
-            document.getElementById('coteVal').innerText = savedCote + 'x';
-            document.getElementById('debutTime').innerText = timeString;
         }
 
         function showSignal(game, imagePath) {
