@@ -3,15 +3,16 @@ import os
 import threading
 import random
 from flask import Flask, jsonify
+from flask_cors import CORS  # <-- AJOUTÉ : Import nécessaire
 from telegram.ext import ApplicationBuilder, CommandHandler
 from datetime import datetime
-import database # Assure-toi que ton fichier database.py est bien présent
+import database 
 
 # --- CONFIGURATION ---
 TOKEN = os.environ.get("TOKEN")
 app = Flask(__name__)
+CORS(app)  # <-- AJOUTÉ : Autorise l'application à interroger le serveur
 
-# Tes séquences de minutes
 sequences = {
     'CRASH': [0, 4, 7, 10, 14, 17, 20, 24, 27, 30, 34, 37, 40, 44, 47, 50, 54, 57],
     'AVIATOR': [3, 5, 9, 13, 15, 19, 23, 25, 29, 33, 35, 39, 43, 45, 49, 53, 55, 59]
@@ -19,7 +20,6 @@ sequences = {
 
 current_data = {'CRASH': {'cote': 0, 'minute': -1}, 'AVIATOR': {'cote': 0, 'minute': -1}}
 
-# --- PARTIE WEB (API POUR L'APP) ---
 @app.route('/')
 def home():
     return "Bot en ligne"
@@ -42,19 +42,21 @@ def get_signal(game):
     return jsonify({'cote': current_data[game]['cote'], 'minute': current_data[game]['minute']})
 
 def run_web():
+    # Utilisation du port fourni par Render ou 8080 par défaut
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
 
-# --- PARTIE BOT TELEGRAM ---
 async def start(update, context):
-    await update.message.reply_text("Bot opérationnel ! Le serveur de signaux est actif.")
+    await update.message.reply_text("Bot opérationnel !")
 
 if __name__ == '__main__':
-    # 1. Lance le serveur web (Flask) dans un thread séparé
+    # Lancement du serveur Web en thread
     threading.Thread(target=run_web, daemon=True).start()
     
-    # 2. Lance le bot Telegram
+    # Lancement du Bot Telegram
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler('start', start))
     
-    print("Bot et Serveur API lancés avec succès...")
-    application.run_polling()
+    print("Bot et Serveur API lancés...")
+    
+    # drop_pending_updates=True résout le conflit de connexion
+    application.run_polling(drop_pending_updates=True)
