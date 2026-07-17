@@ -1,23 +1,31 @@
 import logging
 import os
-from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
+import threading
+from flask import Flask
+from telegram.ext import ApplicationBuilder, CommandHandler
 import database
 
-# Récupère le TOKEN depuis les variables d'environnement de Render
 TOKEN = os.environ.get("TOKEN")
+app = Flask(__name__)
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+# Route simple pour dire à Render : "Je suis bien ouvert sur un port"
+@app.route('/')
+def home():
+    return "Bot en ligne"
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    # Test simple pour vérifier la connexion à la base
-    await update.message.reply_text(f"Bot opérationnel pour l'ID : {user_id}")
+# Fonction pour lancer le serveur web
+def run_web():
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
+
+# Ton code bot existant
+async def start(update, context):
+    await update.message.reply_text("Bot opérationnel !")
 
 if __name__ == '__main__':
-    if not TOKEN:
-        print("Erreur : Le TOKEN n'est pas configuré dans les variables d'environnement.")
-    else:
-        application = ApplicationBuilder().token(TOKEN).build()
-        application.add_handler(CommandHandler('start', start))
-        application.run_polling()
+    # Lance le serveur web dans un fil séparé (thread)
+    threading.Thread(target=run_web).start()
+    
+    # Lance le bot
+    application = ApplicationBuilder().token(TOKEN).build()
+    application.add_handler(CommandHandler('start', start))
+    application.run_polling()
