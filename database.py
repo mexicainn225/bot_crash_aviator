@@ -1,42 +1,27 @@
-import firebase_admin
-from firebase_admin import credentials, firestore
 import os
 
-# Initialisation
-cred = credentials.Certificate("serviceAccountKey.json")
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+USERS_FILE = "users.txt"
 
-# --- CACHE LOCAL ---
-# On stocke les IDs autorisés en mémoire pour éviter de demander à Firebase à chaque fois
-authorized_cache = set()
+def load_authorized_users():
+    """Charge les utilisateurs autorisés depuis le fichier local au démarrage."""
+    if not os.path.exists(USERS_FILE):
+        return set()
+    with open(USERS_FILE, "r") as f:
+        return set(line.strip() for line in f if line.strip())
 
-def load_cache():
-    """Charge une seule fois tous les utilisateurs autorisés au démarrage."""
-    try:
-        users = db.collection('users').where('authorized', '==', True).stream()
-        for user in users:
-            authorized_cache.add(user.id)
-        print(f"Cache chargé : {len(authorized_cache)} utilisateurs autorisés.")
-    except Exception as e:
-        print(f"Erreur chargement cache : {e}")
-
-# Appel unique au démarrage
-load_cache()
+# Chargement initial dans la RAM
+authorized_cache = load_authorized_users()
+print(f"Cache chargé : {len(authorized_cache)} utilisateurs autorisés.")
 
 def is_user_authorized(telegram_id):
     """Vérification ultra-rapide en mémoire (RAM)."""
     return str(telegram_id) in authorized_cache
 
 def authorize_user(telegram_id):
-    """Valide dans Firebase ET met à jour le cache instantanément."""
-    try:
-        db.collection('users').document(str(telegram_id)).set({
-            'authorized': True,
-            'date_validation': firestore.SERVER_TIMESTAMP
-        })
-        # Mise à jour du cache local
-        authorized_cache.add(str(telegram_id))
-        print(f"Utilisateur {telegram_id} validé et ajouté au cache.")
-    except Exception as e:
-        print(f"Erreur validation : {e}")
+    """Valide dans le fichier local ET met à jour le cache."""
+    uid = str(telegram_id)
+    if uid not in authorized_cache:
+        authorized_cache.add(uid)
+        with open(USERS_FILE, "a") as f:
+            f.write(uid + "\n")
+        print(f"Utilisateur {uid} validé et sauvegardé.")
