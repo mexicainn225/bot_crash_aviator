@@ -1,5 +1,4 @@
 import os
-import threading
 import database
 from flask import Flask
 from flask_cors import CORS
@@ -10,6 +9,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 TOKEN = os.environ.get("TOKEN")
 ADMIN_ID = 5724620019 
 PORT = int(os.environ.get("PORT", 8080))
+# Ton URL de déploiement Render
+WEBHOOK_URL = "https://bot-crash-aviator.onrender.com/"
 
 app = Flask(__name__)
 CORS(app)
@@ -22,7 +23,7 @@ def home():
 async def start(update, context):
     user_id = update.effective_user.id
     if database.is_user_authorized(user_id):
-        keyboard = [[InlineKeyboardButton("🚀 Lancer l'Application", web_app={"url": "https://bot-crash-aviator.onrender.com"})]]
+        keyboard = [[InlineKeyboardButton("🚀 Lancer l'Application", web_app={"url": WEBHOOK_URL})]]
         await update.message.reply_text("Accès autorisé, bienvenue !", reply_markup=InlineKeyboardMarkup(keyboard))
     else:
         await update.message.reply_text("Inscris-toi avec le code COK225 et envoie ton ID pour validation.")
@@ -40,18 +41,20 @@ async def valider(update, context):
         await update.message.reply_text(f"Utilisateur {user_id_to_auth} validé !")
         await context.bot.send_message(chat_id=int(user_id_to_auth), text="✅ Ton accès est validé ! Tape /start pour lancer.")
 
-def run_bot():
-    """Fonction dédiée au démarrage du bot Telegram."""
+# --- LANCEMENT ---
+if __name__ == '__main__':
+    # Initialisation du bot
     application = ApplicationBuilder().token(TOKEN).build()
+    
+    # Ajout des handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('valider', valider))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    application.run_polling()
-
-# --- LANCEMENT ---
-if __name__ == '__main__':
-    # On lance le bot dans un thread séparé
-    threading.Thread(target=run_bot, daemon=True).start()
     
-    # Flask tourne dans le thread principal
-    app.run(host='0.0.0.0', port=PORT)
+    # Lancement du bot via Webhook (pour fonctionner avec Flask sur Render)
+    # Plus besoin de threading ou de run_polling
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        webhook_url=WEBHOOK_URL
+    )
