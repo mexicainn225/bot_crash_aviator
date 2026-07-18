@@ -1,27 +1,25 @@
 import os
+from supabase import create_client
 
-USERS_FILE = "users.txt"
+# Récupère les clés depuis les variables d'environnement sur Render
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+supabase = create_client(url, key)
 
-def load_authorized_users():
-    """Charge les utilisateurs autorisés depuis le fichier local au démarrage."""
-    if not os.path.exists(USERS_FILE):
-        return set()
-    with open(USERS_FILE, "r") as f:
-        return set(line.strip() for line in f if line.strip())
+def ajouter_utilisateur(user_id, id_1win):
+    # Insère ou met à jour l'utilisateur dans la table "users"
+    supabase.table("users").upsert({
+        "user_id": user_id, 
+        "id_1win": id_1win, 
+        "status": "pending"
+    }).execute()
 
-# Chargement initial dans la RAM
-authorized_cache = load_authorized_users()
-print(f"Cache chargé : {len(authorized_cache)} utilisateurs autorisés.")
+def valider_utilisateur(user_id):
+    # Change le statut en 'active'
+    supabase.table("users").update({"status": "active"}).eq("user_id", user_id).execute()
 
-def is_user_authorized(telegram_id):
-    """Vérification ultra-rapide en mémoire (RAM)."""
-    return str(telegram_id) in authorized_cache
-
-def authorize_user(telegram_id):
-    """Valide dans le fichier local ET met à jour le cache."""
-    uid = str(telegram_id)
-    if uid not in authorized_cache:
-        authorized_cache.add(uid)
-        with open(USERS_FILE, "a") as f:
-            f.write(uid + "\n")
-        print(f"Utilisateur {uid} validé et sauvegardé.")
+def est_valide(user_id):
+    # Vérifie si le statut est 'active'
+    response = supabase.table("users").select("status").eq("user_id", user_id).execute()
+    data = response.data
+    return len(data) > 0 and data[0]['status'] == 'active'
