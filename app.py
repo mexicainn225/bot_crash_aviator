@@ -1,17 +1,16 @@
-import logging
 import os
 import threading
-import random
+import database  # Votre fichier database.py
 from flask import Flask, jsonify
 from flask_cors import CORS
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
-from datetime import datetime
-import database
 
 # --- CONFIGURATION ---
 TOKEN = os.environ.get("TOKEN")
 ADMIN_ID = 5724620019 
+PORT = int(os.environ.get("PORT", 8080))
+
 app = Flask(__name__)
 CORS(app)
 
@@ -20,45 +19,45 @@ CORS(app)
 def home():
     return "Bot en ligne"
 
-@app.route('/get_signal/<game>')
-def get_signal(game):
-    # Logique signal identique...
-    return jsonify({'status': 'ok'})
-
 def run_flask():
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
+    app.run(host='0.0.0.0', port=PORT)
 
 # --- PARTIE BOT TELEGRAM ---
 async def start(update, context):
     user_id = update.effective_user.id
+    
+    # Vérification Firebase (assurez-vous que cette fonction est rapide dans database.py)
     if database.is_user_authorized(user_id):
         keyboard = [[InlineKeyboardButton("🚀 Lancer l'Application", web_app={"url": "https://bot-crash-aviator.onrender.com"})]]
-        await update.message.reply_text("Accès autorisé :", reply_markup=InlineKeyboardMarkup(keyboard))
+        await update.message.reply_text("Accès autorisé, bienvenue !", reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        await update.message.reply_text("Inscris-toi avec le code COK225 et envoie ton ID.")
+        await update.message.reply_text("Inscris-toi avec le code COK225 et envoie ton ID pour validation.")
 
 async def handle_message(update, context):
     text = update.message.text
     if text.isdigit() and len(text) > 5:
+        # Enregistrement Firebase
         database.db.collection('pending_ids').document(str(update.effective_user.id)).set({
             'telegram_id': update.effective_user.id,
             'id_1xbet': text,
             'status': 'en_attente'
         })
-        await context.bot.send_message(ADMIN_ID, f"Nouvel ID : {text}")
-        await update.message.reply_text("ID reçu, attente validation ✅")
+        await context.bot.send_message(ADMIN_ID, f"🚨 Nouvelle demande ID : {text}\nValide avec: /valider {update.effective_user.id}")
+        await update.message.reply_text("ID reçu, attente de validation par l'admin ✅")
 
 async def valider(update, context):
     if update.effective_user.id == ADMIN_ID and context.args:
-        database.authorize_user(context.args[0])
-        await update.message.reply_text("Validé !")
+        user_id_to_auth = context.args[0]
+        database.authorize_user(user_id_to_auth)
+        await update.message.reply_text(f"Utilisateur {user_id_to_auth} validé !")
+        await context.bot.send_message(chat_id=int(user_id_to_auth), text="✅ Ton accès est validé ! Tape /start pour lancer.")
 
 # --- LANCEMENT ---
 if __name__ == '__main__':
-    # On lance Flask dans un thread séparé
+    # Flask dans un thread séparé (comme votre ancien bot)
     threading.Thread(target=run_flask, daemon=True).start()
     
-    # On lance le bot dans le thread principal
+    # Bot dans le thread principal
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('valider', valider))
