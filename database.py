@@ -2,41 +2,41 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import os
 
-# --- INITIALISATION ---
-# Assure-toi que le fichier serviceAccountKey.json est à la racine de ton projet
+# Initialisation
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-print("Connexion à Firebase réussie !")
+# --- CACHE LOCAL ---
+# On stocke les IDs autorisés en mémoire pour éviter de demander à Firebase à chaque fois
+authorized_cache = set()
 
-# --- FONCTIONS DE GESTION DES UTILISATEURS ---
+def load_cache():
+    """Charge une seule fois tous les utilisateurs autorisés au démarrage."""
+    try:
+        users = db.collection('users').where('authorized', '==', True).stream()
+        for user in users:
+            authorized_cache.add(user.id)
+        print(f"Cache chargé : {len(authorized_cache)} utilisateurs autorisés.")
+    except Exception as e:
+        print(f"Erreur chargement cache : {e}")
+
+# Appel unique au démarrage
+load_cache()
 
 def is_user_authorized(telegram_id):
-    """
-    Vérifie si l'ID Telegram est présent dans la collection 'users' 
-    et si le champ 'authorized' est égal à True.
-    """
-    try:
-        doc_ref = db.collection('users').document(str(telegram_id))
-        doc = doc_ref.get()
-        if doc.exists:
-            return doc.to_dict().get('authorized', False)
-        return False
-    except Exception as e:
-        print(f"Erreur lors de la vérification de l'utilisateur : {e}")
-        return False
+    """Vérification ultra-rapide en mémoire (RAM)."""
+    return str(telegram_id) in authorized_cache
 
 def authorize_user(telegram_id):
-    """
-    Ajoute ou met à jour l'ID Telegram dans la collection 'users'.
-    Définit le statut 'authorized' à True.
-    """
+    """Valide dans Firebase ET met à jour le cache instantanément."""
     try:
         db.collection('users').document(str(telegram_id)).set({
             'authorized': True,
             'date_validation': firestore.SERVER_TIMESTAMP
         })
-        print(f"Utilisateur {telegram_id} validé avec succès.")
+        # Mise à jour du cache local
+        authorized_cache.add(str(telegram_id))
+        print(f"Utilisateur {telegram_id} validé et ajouté au cache.")
     except Exception as e:
-        print(f"Erreur lors de la validation de l'utilisateur : {e}")
+        print(f"Erreur validation : {e}")
