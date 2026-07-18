@@ -53,5 +53,5 @@ if __name__ == '__main__':
     # On lance le bot dans un thread séparé
     threading.Thread(target=run_bot, daemon=True).start()
     
-    # Flask tourne dans le thread principal (attendu par Gunicorn)
+    # Flask tourne dans le thread principal
     app.run(host='0.0.0.0', port=PORT)
